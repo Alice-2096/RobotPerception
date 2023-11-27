@@ -17,7 +17,8 @@ class KeyboardPlayerPyGame(Player):
         self.keymap = None
         super(KeyboardPlayerPyGame, self).__init__()
         self.kmeans = None
-        # each element is a {histogram, position} pair
+
+        # each element is a {histogram, image, position} pair
         self.live_image_list = []
         self.counter = 0
 
@@ -47,7 +48,7 @@ class KeyboardPlayerPyGame(Player):
         #     update_config('test.yaml', K)
 
         # build visual vocab
-        kmeans = train_vocab()
+        kmeans = train_vocab(200)
         self.kmeans = kmeans
         print('done updating kmeans, now entering pre navigation phase ...')
 
@@ -84,7 +85,8 @@ class KeyboardPlayerPyGame(Player):
             if event.type == pygame.KEYUP:
                 if event.key in self.keymap:
                     self.last_act ^= self.keymap[event.key]
-
+        
+        
         return self.last_act
 
     def show_target_images(self):
@@ -143,9 +145,11 @@ class KeyboardPlayerPyGame(Player):
         self.fpv = fpv
         self.counter += 1
 
-        if self.counter % 10 == 0:
-            # !Run build_hist every 5 cycles (0.5 second) this might be too slow
-            self.build_hist(fpv)
+        # build histogram in every frame
+        self.build_hist(fpv)
+        # alternatively, build histogram every 5 frames
+        # if self.counter % 5 == 0:
+        #     self.build_hist(fpv)
 
         state = self.get_state()
         if state is not None:

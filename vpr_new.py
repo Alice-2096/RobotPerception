@@ -103,7 +103,7 @@ def process_image_and_find_best_match(kmeans, new_image, list_of_histograms):
 # ====================================================================================================
 
 
-def train_vocab():
+def train_vocab(clusters=100):
     print('Loading textures...')
     folder_path = './data/textures/'
     images = load_images_from_folder(folder_path)
@@ -112,7 +112,7 @@ def train_vocab():
     print('Finding feature points...')
     keypoints, descriptors, descriptors_list = find_feature_points(images)
     print('Building visual dictionary...')
-    visual_dictionary, kmeans = build_vocabulary(descriptors_list, 100)
+    visual_dictionary, kmeans = build_vocabulary(descriptors_list, clusters)
     print('Visual dictionary built.')
     return kmeans
 
