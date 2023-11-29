@@ -20,7 +20,7 @@ class KeyboardPlayerPyGame(Player):
         self.path = None  # list of actions to navigate to the target image
         self.current_index = 0  # index of the current pos while walking the path
 
-        # each element is a {histogram, image, position} pair
+        # each element is a {histogram, image, keypress} pair
         self.live_image_list = []
         self.counter = 0
 
@@ -90,14 +90,20 @@ class KeyboardPlayerPyGame(Player):
         if self.path is not None and len(self.path) > 0:
             if self.current_index >= len(self.path):
                 print('Reached target image!')
-                # TODO: Do you want to restart or continue exploring? now our code will let the user continue exploring
+                """
+                TODO: Do you want to restart/show the matched image again and let the user choose another matched image or continue exploring? 
+                
+                now our code will let the user continue exploring after reaching the target image
+                
+                """
                 self.path = None
                 self.current_index = 0
                 self.last_act = Action.IDLE
                 return self.last_act
-            act = self.path[self.current_index]
-            self.current_index += 1
-            return act
+            else:
+                act = self.path[self.current_index]
+                self.current_index += 1
+                return act
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -171,8 +177,9 @@ class KeyboardPlayerPyGame(Player):
 
         # build histogram in every frame
         self.build_hist(fpv)
-        # alternatively, build histogram every 5 frames
-        # if self.counter % 5 == 0:
+        # !alternatively, build histogram every K frames
+        # k = 5
+        # if self.counter % k == 0:
         #     self.build_hist(fpv)
 
         # state = self.get_state()
