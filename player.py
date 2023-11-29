@@ -17,6 +17,8 @@ class KeyboardPlayerPyGame(Player):
         self.keymap = None
         super(KeyboardPlayerPyGame, self).__init__()
         self.kmeans = None
+        self.path = None  # list of actions to navigate to the target image
+        self.current_index = 0  # index of the current pos while walking the path
 
         # each element is a {histogram, image, position} pair
         self.live_image_list = []
@@ -26,6 +28,9 @@ class KeyboardPlayerPyGame(Player):
         self.fpv = None
         self.last_act = Action.IDLE
         self.screen = None
+        self.path = None
+        self.current_index = 0
+        self.kmeans = None
         pygame.init()
         self.keymap = {
             pygame.K_LEFT: Action.LEFT,
@@ -70,7 +75,30 @@ class KeyboardPlayerPyGame(Player):
             cv2.imshow(f'Best Match #{i}', image)
             cv2.waitKey(1)
 
+        # user enter the index of the desired target image to navigate to
+        target_index = int(input('Enter the index of the target image: '))
+        # output the keys to navigate to the target image from index 0 to target_index, skip IDLE
+        self.path = []
+        for i in range(target_index):
+            key = self.live_image_list[i]['key']
+            if key != Action.IDLE:
+                self.path.append(key)
+        print('Path length to target image: ', len(self.path))
+
     def act(self):
+        # if in NAV phase, follow the pre-determined path
+        if self.path is not None and len(self.path) > 0:
+            if self.current_index >= len(self.path):
+                print('Reached target image!')
+                # TODO: Do you want to restart or continue exploring? now our code will let the user continue exploring
+                self.path = None
+                self.current_index = 0
+                self.last_act = Action.IDLE
+                return self.last_act
+            act = self.path[self.current_index]
+            self.current_index += 1
+            return act
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -85,8 +113,7 @@ class KeyboardPlayerPyGame(Player):
             if event.type == pygame.KEYUP:
                 if event.key in self.keymap:
                     self.last_act ^= self.keymap[event.key]
-        
-        
+
         return self.last_act
 
     def show_target_images(self):
@@ -128,15 +155,12 @@ class KeyboardPlayerPyGame(Player):
         super(KeyboardPlayerPyGame, self).set_target_images(images)
         self.show_target_images()
 
-    def get_position(self):
-        return (0, 0, 0)  # TODO: get current position on the map
-
     def build_hist(self, fpv):
         print('process captured images ...')
         if self.kmeans is not None:
             hist = generate_histogram(fpv, self.kmeans)
             self.live_image_list.append(
-                {'hist': hist, 'image': fpv, 'position': self.get_position})
+                {'hist': hist, 'image': fpv, 'key': self.last_act})
 
     def see(self, fpv):
         if fpv is None or len(fpv.shape) < 3:
@@ -151,12 +175,12 @@ class KeyboardPlayerPyGame(Player):
         # if self.counter % 5 == 0:
         #     self.build_hist(fpv)
 
-        state = self.get_state()
-        if state is not None:
-            if state == Phase.EXPLORATION:  # in the NAV phase, we generate histogram for each captured image
-                # ! for some reason this does not run at all in the exploration phase
-                print('EXPLOREATION!')
-                pass
+        # state = self.get_state()
+        # if state is not None:
+        #     if state == Phase.EXPLORATION:  # in the NAV phase, we generate histogram for each captured image
+        #         # ! for some reason this does not run at all in the exploration phase
+        #         print('EXPLOREATION!')
+        #         pass
 
         if self.screen is None:
             h, w, _ = fpv.shape
