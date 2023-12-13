@@ -79,6 +79,20 @@ def compare_histograms(query_histogram, list_of_histograms):
     return most_similar_index
 
 
+def compare_histograms_filter_by_threshold(query_histogram, list_of_histograms, delta, threshold=0.5):
+    query_histogram = np.array(query_histogram)
+    # Calculate Euclidean distances
+    distances = [np.linalg.norm(query_histogram - hist)
+                 for hist in list_of_histograms]
+
+    most_similar_index = np.argmin(distances)
+    # Filter histogram by threshold
+    if distances[most_similar_index] > threshold:
+        most_similar_index = -1
+
+    return -1 if most_similar_index == -1 else most_similar_index + delta
+
+
 def process_image_and_find_best_match(kmeans, new_image, list_of_histograms):
     # Step 1: Extract features from the new image
     orb = cv2.ORB_create()
